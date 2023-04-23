@@ -6,7 +6,7 @@
 
 ## TODO
 - [ ] Using nanoFLANN to speed up.
-- [ ] Is there any way to optimize the way when creating a cere solver.
+- [ ] Is there any way to optimize the way when creating a ceres solver.
 
 ## Acknowledgements
 Thanks for [testICP](https://github.com/chengwei0427/testICP), 
