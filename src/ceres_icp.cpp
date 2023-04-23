@@ -1,16 +1,18 @@
 #include "ceres_icp.h"
 #include "lidarCeres.h"
 
+int USE_AUTODIFF = 1;
+
 namespace ceresICP
 {
     CERES_ICP::CERES_ICP(const YAML::Node &node)
         : kdtree_flann(new pcl::KdTreeFLANN<PointType>)
     {
-
         max_iterations = node["max_iter"].as<int>();
         max_coresspoind_dis = node["max_corr_dist"].as<float>();
         trans_eps = node["trans_eps"].as<float>();
         euc_fitness_eps = node["euc_fitness_eps"].as<float>();
+        is_autoDiff = node["is_autoDiff"].as<bool>();
     }
 
     CERES_ICP::~CERES_ICP()
@@ -23,6 +25,11 @@ namespace ceresICP
         kdtree_flann->setInputCloud(target);
     }
 
+
+    /**
+     * 解析求导以及自动求导
+     * 使用is_autoDiff选择
+    */
     bool CERES_ICP::scanMatch(const CLOUD_PTR &source, const Eigen::Matrix4f &predict_pose,
                                   CLOUD_PTR &transformed_source_ptr, Eigen::Matrix4f &result_pose)
     {
@@ -38,8 +45,20 @@ namespace ceresICP
             ceres::LossFunction *loss_function = new ceres::HuberLoss(0.1);
             ceres::Problem::Options problem_options;
             ceres::Problem problem(problem_options);
-
-            problem.AddParameterBlock(parameters, 7, new test_ceres::PoseSE3Parameterization());
+            if(is_autoDiff) {
+                std::cout<<"auto Diff, i: "<<i<<std::endl;
+                ceres::LocalParameterization *q_parameterization = 
+                new ceres::EigenQuaternionParameterization(); 	// xyzw顺序
+                // 注意到如果使用了LocalParameterization，那么必须添加AddParameterBlock来添加不规则+-优化变量
+                problem.AddParameterBlock(parameters, 4, q_parameterization); 
+                problem.AddParameterBlock(parameters + 4, 3);
+            } 
+            else {
+                //如果我们的参数属于正常的plus更新的话，也就是没有过参数（LocalParameterization），没有manifold space，那么就完全不需要调用AddParameterBlock或者SetParameterization函数；
+                //void AddParameterBlock(double* values, int size, LocalParameterization* local_parameterization);
+                problem.AddParameterBlock(parameters, 7, new ceresICP::PoseSE3Parameterization());
+            }
+            
 
             // std::cout << "------------ " << i << "------------" << std::endl;
             for (int j = 0; j < transform_cloud->size(); ++j)
@@ -60,9 +79,16 @@ namespace ceresICP
                                                              target_ptr->at(indices.front()).z);
 
                 Eigen::Vector3d origin_eigen(origin_pt.x, origin_pt.y, origin_pt.z);
+                if(is_autoDiff) {
+                    ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<LidarEdgeFactor, 3, 4, 3>( 
+                    new LidarEdgeFactor(origin_eigen, nearest_pt));
+                    problem.AddResidualBlock(cost_function, loss_function, parameters, parameters + 4);
+                }
+                else {
+                    ceres::CostFunction *cost_function = new ceresICP::EdgeAnalyticCostFuntion(origin_eigen, nearest_pt);
+                    problem.AddResidualBlock(cost_function, loss_function, parameters);
+                }
 
-                ceres::CostFunction *cost_function = new test_ceres::EdgeAnalyticCostFuntion(origin_eigen, nearest_pt);
-                problem.AddResidualBlock(cost_function, loss_function, parameters);
             }
             ceres::Solver::Options options;
             options.linear_solver_type = ceres::DENSE_QR;
@@ -87,31 +113,3 @@ namespace ceresICP
         pcl::transformPointCloud(*source_ptr, *transformed_source_ptr, result_pose);
         return true;
     }
-
-    float CERES_ICP::getFitnessScore()
-    {
-        float max_range = std::numeric_limits<float>::max();
-        float score = 0.f;
-
-        CLOUD_PTR transform_cloud(new CLOUD());
-        pcl::transformPointCloud(*source_ptr, *transform_cloud, final_pose);
-        std::vector<int> nn_indices(1);
-        std::vector<float> nn_dists(1);
-
-        int nr = 0;
-
-        for (size_t i = 0; i < transform_cloud->size(); ++i)
-        {
-            kdtree_flann->nearestKSearch(transform_cloud->points[i], 1, nn_indices, nn_dists);
-            if (nn_dists.front() <= max_range)
-            {
-                score += nn_dists.front();
-                nr++;
-            }
-        }
-        if (nr > 0)
-            return score / static_cast<float>(nr);
-        else
-            return (std::numeric_limits<float>::max());
-    }
-}

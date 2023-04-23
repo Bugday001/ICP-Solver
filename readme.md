@@ -1,6 +1,9 @@
 # CERES-ICP
 使用CERES库进行icp匹配
 
+目前支持两种计算方法：解析求导和自动求导。
+通过yaml中的is_autoDiff选择。
 
 ## Acknowledgements
 [testICP](https://github.com/chengwei0427/testICP)
+[ceres blog](https://blog.csdn.net/qq_42911741/article/details/127326164)

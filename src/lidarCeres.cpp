@@ -1,6 +1,6 @@
 #include "lidarCeres.h"
 
-namespace test_ceres
+namespace ceresICP
 {
     EdgeAnalyticCostFuntion::EdgeAnalyticCostFuntion(Eigen::Vector3d cur_pt_, Eigen::Vector3d near_pt_)
         : cur_pt(cur_pt_), near_pt(near_pt_) {}
@@ -10,12 +10,14 @@ namespace test_ceres
         Eigen::Map<const Eigen::Quaterniond> q_last_curr(parameters[0]);
         Eigen::Map<const Eigen::Vector3d> t_last_curr(parameters[0] + 4);
         Eigen::Vector3d lp = q_last_curr * cur_pt + t_last_curr;
-        residuals[0] = lp.x() - near_pt.x();
+        residuals[0] = lp.x() - near_pt.x();  //ResidualBlock残差块
         residuals[1] = lp.y() - near_pt.y();
         residuals[2] = lp.z() - near_pt.z();
 
         if (jacobians != NULL)
         {
+            //似乎是使用李代数扰动模型计算雅各比矩阵，不太懂
+            //https://zhuanlan.zhihu.com/p/545458473
             Eigen::Matrix3d skew_lp = skew(cur_pt);
             Eigen::Matrix<double, 3, 6> dp_by_se3;
             // dp_by_se3.block<3, 3>(0, 0) = -q_last_curr.matrix() * skew_lp;  //  右乘扰动

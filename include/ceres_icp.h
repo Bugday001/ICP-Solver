@@ -8,12 +8,14 @@
 #include <pcl/point_cloud.h>
 #include <yaml-cpp/yaml.h>
 
+
 typedef pcl::PointXYZI PointType;
 typedef pcl::PointCloud<PointType> CLOUD;
 typedef CLOUD::Ptr CLOUD_PTR;
 
 namespace ceresICP
-{
+{   
+
     class CERES_ICP
     {
     public:
@@ -22,6 +24,10 @@ namespace ceresICP
         ~CERES_ICP();
         bool setTargetCloud(const CLOUD_PTR &target);
         bool scanMatch(const CLOUD_PTR &source, const Eigen::Matrix4f &predict_pose,
+                       CLOUD_PTR &transformed_source_ptr, Eigen::Matrix4f &result_pose);
+
+        /*============= AUTODIFF ================*/
+        bool scanMatch_autoDiff(const CLOUD_PTR &source, const Eigen::Matrix4f &predict_pose,
                        CLOUD_PTR &transformed_source_ptr, Eigen::Matrix4f &result_pose);
 
         float getFitnessScore();
@@ -34,7 +40,10 @@ namespace ceresICP
         float trans_eps;
         float euc_fitness_eps;
 
+        bool is_autoDiff = false;
+
         double parameters[7] = {0, 0, 0, 1, 0, 0, 0};
+        //Map就是引用，同一块地址
         Eigen::Map<Eigen::Quaterniond> q_w_curr = Eigen::Map<Eigen::Quaterniond>(parameters);
         Eigen::Map<Eigen::Vector3d> t_w_curr = Eigen::Map<Eigen::Vector3d>(parameters + 4);
 

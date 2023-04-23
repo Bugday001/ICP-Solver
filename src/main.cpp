@@ -50,28 +50,13 @@ int main() {
     pcl::transformPointCloud(*cloud_source, *cloud_target, Tr);
     std::cout << "origi T:\n"
               << Tr << std::endl;
-    // {
-    //     Sophus::SE3d SE3_rt((Eigen::AngleAxisd(M_PI / 4, Eigen::Vector3d(1, 0, 0)) * Eigen::AngleAxisd(M_PI / 3, Eigen::Vector3d(0, 0, 1))).matrix(), Eigen::Vector3d(1, -3, 2));
-    //     std::cout << "SE3 rt:\n"
-    //               << SE3_rt.matrix() << std::endl;
-    //     Sophus::SE3d SE3_update((r_x * r_z).matrix(), Eigen::Vector3d(0.1, -0.3, 0.2));
-    //     std::cout << "SE3 delta:\n"
-    //               << SE3_update.matrix() << std::endl;
-    //     std::cout << (SE3_rt * SE3_update).matrix() << "\n"
-    //               << (SE3_update * SE3_rt).matrix() << std::endl;
-
-    //     Eigen::Matrix<double, 6, 1> se3;
-    //     se3.setZero();
-    //     se3(0, 0) = 0.1;
-    //     se3(3, 0) = 0.2;
-    //     std::cout << (Sophus::SE3d::exp(se3) * SE3_rt).matrix() << "\n"
-    //               << (SE3_rt * Sophus::SE3d::exp(se3)).matrix() << std::endl;
-    // }
 
     display_2_pc(cloud_source, cloud_target, "before", 1);
     CLOUD_PTR transformed_source(new CLOUD());
     Eigen::Matrix4f T;
-    cout<<"===========START CERES ICP TEST !===========";
+    cout<<"===========START CERES ICP TEST !==========="<<endl;
+    //对于slam直接icp匹配，大概10,000是一个较好的数量。依据DLO算法论文
+    cout<<"cloud_source points size: "<<cloud_source->size()<<endl;
     reg_ptr->setTargetCloud(cloud_target);
     reg_ptr->scanMatch(cloud_source, Eigen::Matrix4f::Identity(), transformed_source, T);
     std::cout << T << std::endl;
