@@ -7,7 +7,7 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <yaml-cpp/yaml.h>
-
+#include "nanoflann.hpp"
 
 typedef pcl::PointXYZI PointType;
 typedef pcl::PointCloud<PointType> CLOUD;
