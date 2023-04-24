@@ -5,7 +5,7 @@
 通过yaml中的is_autoDiff选择。
 
 ## TODO
-- [ ] Plane-to-Plane ICP.(GICP)已完成旋转矩阵部分。
+- [X] Plane-to-Plane ICP.(GICP)。
 - [ ] Using nanoFLANN to speed up.
 - [ ] Is there any way to optimize the way when creating a ceres solver.
 

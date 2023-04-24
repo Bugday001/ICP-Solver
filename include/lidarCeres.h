@@ -110,13 +110,14 @@ namespace ceresICP
             } 
     
         template<typename T> 
-        bool operator()(const T *q, T *residual) const { // 仿函数，用于计算残差 
+        bool operator()(const T *q, const T *t, T *residual) const { // 仿函数，用于计算残差 
             //ceres::QuaternionParameterization：内部存储顺序为(w,x,y,z)
             // ceres::EigenQuaternionParameterization：内部存储顺序为(x,y,z,w)
             // Eigen::Quaternion(w,x,y,z)：内部存储顺序为(x,y,z,w)（构造函数的时候是wxyz）
             Eigen::Matrix<T, 3, 1> cp{T(cur_pt_.x()), T(cur_pt_.y()), T(cur_pt_.z())}; 
             Eigen::Matrix<T, 3, 1> lpa{T(near_pt_.x()), T(near_pt_.y()), T(near_pt_.z())}; 
             Eigen::Quaternion<T> q_last_curr{q[3], q[0], q[1], q[2]};
+            Eigen::Matrix<T, 3, 1> t_last_curr{T(t[0]), T(t[1]), T(t[2])};
             // std::cout<<"ok0"<<std::endl;
             Eigen::Matrix<T, 3, 3> cur_C = cur_C_.cast<T>();//B
             Eigen::Matrix<T, 3, 3> near_C = near_C_.cast<T>();//A
@@ -130,7 +131,7 @@ namespace ceresICP
             // tmp = tmp.inverse();
 
             //注意定义R，在此是R*cp-lpa
-            Eigen::Matrix<T, 3, 1> dT = R*cp - lpa;
+            Eigen::Matrix<T, 3, 1> dT = R*cp - lpa+ t_last_curr;
             Eigen::Matrix<T, 1, 1> nu = dT.transpose()*tmp*dT;
             // // Eigen::Matrix<T, 3, 1> t_last_curr{T(t[0]), T(t[1]), T(t[2])};
             // // Eigen::Matrix<T, 3, 1> lp = q_last_curr * cp + t_last_curr;

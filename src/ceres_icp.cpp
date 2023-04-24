@@ -238,7 +238,7 @@ namespace ceresICP
             std::cout << "auto Diff, i: " << i << std::endl;
             // 注意到如果使用了LocalParameterization，那么必须添加AddParameterBlock来添加不规则+-优化变量
             problem.AddParameterBlock(parameters, 4, q_parameterization);
-            // problem.AddParameterBlock(parameters + 4, 3);
+            problem.AddParameterBlock(parameters + 4, 3);
             // std::cout << "------------ " << i << "------------" << std::endl;
             for (int j = 0; j < transform_cloud->size(); ++j)
             {
@@ -260,9 +260,9 @@ namespace ceresICP
 
                 Eigen::Vector3d origin_eigen(origin_pt.x, origin_pt.y, origin_pt.z);
                 // std::cout<<"okk"<<std::endl;
-                ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<GICPFactor, 1, 4>(
+                ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<GICPFactor, 1, 4, 3>(
                     new ceresICP::GICPFactor(origin_eigen, gicp_source.Cs[indices.front()], nearest_pt, gicp_target.Cs[indices.front()]));
-                problem.AddResidualBlock(cost_function, loss_function, parameters);
+                problem.AddResidualBlock(cost_function, loss_function, parameters, parameters+4);
             }
             ceres::Solver::Options options;
             options.linear_solver_type = ceres::DENSE_QR;

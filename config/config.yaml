@@ -9,7 +9,7 @@ ICP_CERES:
     max_corr_dist : 1.0
     trans_eps : 0.01
     euc_fitness_eps : 0.36
-    max_iter : 2
+    max_iter : 10
     is_autoDiff : false
 ICP_G2O:
     max_corr_dist : 1.0
