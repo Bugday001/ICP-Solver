@@ -5,11 +5,13 @@
 通过yaml中的is_autoDiff选择。
 
 ## TODO
+- [ ] Plane-to-Plane ICP.(GICP)已完成旋转矩阵部分。
 - [ ] Using nanoFLANN to speed up.
 - [ ] Is there any way to optimize the way when creating a ceres solver.
 
 ## Acknowledgements
 Thanks for [testICP](https://github.com/chengwei0427/testICP), 
-[ALOAM](https://github.com/HKUST-Aerial-Robotics/A-LOAM) 
+[ALOAM](https://github.com/HKUST-Aerial-Robotics/A-LOAM),
+[gicp](https://github.com/avsegal/gicp) 
 and 
 [ceres blog](https://blog.csdn.net/qq_42911741/article/details/127326164)

@@ -35,6 +35,10 @@ int main() {
 
     ceresICP::CERES_ICP* reg_ptr = new ceresICP::CERES_ICP(config_node["ICP_CERES"]);
 
+    //滤波
+    std::vector<int> idx;
+    pcl::removeNaNFromPointCloud(*cloud_source, *cloud_source, idx);
+    pcl::removeNaNFromPointCloud(*cloud_target, *cloud_target, idx);
     pcl::VoxelGrid<PointType> ds_sample;
     ds_sample.setLeafSize(ds_size, ds_size, ds_size);
     ds_sample.setInputCloud(cloud_source);
@@ -51,14 +55,20 @@ int main() {
     std::cout << "origi T:\n"
               << Tr << std::endl;
 
-    display_2_pc(cloud_source, cloud_target, "before", 1);
+    // display_2_pc(cloud_source, cloud_target, "before", 1);
     CLOUD_PTR transformed_source(new CLOUD());
     Eigen::Matrix4f T;
     cout<<"===========START CERES ICP TEST !==========="<<endl;
     //对于slam直接icp匹配，大概10,000是一个较好的数量。依据DLO算法论文
     cout<<"cloud_source points size: "<<cloud_source->size()<<endl;
-    reg_ptr->setTargetCloud(cloud_target);
-    reg_ptr->scanMatch(cloud_source, Eigen::Matrix4f::Identity(), transformed_source, T);
+    //test
+    reg_ptr->setGICPTargetCloud(cloud_target);
+
+    reg_ptr->GICPMatch(cloud_source, Eigen::Matrix4f::Identity(), transformed_source, T);
+    // return 0;
+    //end test
+    // reg_ptr->setTargetCloud(cloud_target);
+    // reg_ptr->scanMatch(cloud_source, Eigen::Matrix4f::Identity(), transformed_source, T);
     std::cout << T << std::endl;
     display_2_pc(transformed_source, cloud_target, "after", 1);
 
