@@ -9,13 +9,17 @@ Point-to-Point ICP：支持解析求导和自动求导。通过yaml中的is_auto
 支持Debug输出每次运行时间，支持设置ceres使用多线程。
 
 ## Dependencies
-###  **Ubuntu**
+
+**Ubuntu**
+
 Ubuntu 64-bit 18.04.
 
-### **Ceres Solver**
+**Ceres Solver**
+
 Follow [Ceres Installation](http://ceres-solver.org/installation.html).
 
-### **PCL**
+**PCL**
+
 Follow [PCL Installation](http://www.pointclouds.org/downloads/linux.html).
 
 
