@@ -1,8 +1,9 @@
 # CERES-ICP
 使用CERES库进行icp匹配
 
-目前支持两种计算方法：解析求导和自动求导。
-通过yaml中的is_autoDiff选择。
+GICP：支持自动求导
+
+Point-to-Point ICP：支持解析求导和自动求导。通过yaml中的is_autoDiff选择。
 
 ## TODO
 - [X] Plane-to-Plane ICP.(GICP)。

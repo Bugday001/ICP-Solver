@@ -53,12 +53,13 @@ namespace ceresICP
         CLOUD_PTR target_ptr, source_ptr;
         GICPPoint gicp_target, gicp_source;
         Eigen::Matrix4f final_pose;
+        //params
         int max_iterations;
         float max_coresspoind_dis;
         float trans_eps;
         float euc_fitness_eps;
-
-        bool is_autoDiff = false;
+        int thread_nums = 1;
+        bool is_autoDiff = false, isDebug = false;
 
         double parameters[7] = {0, 0, 0, 1, 0, 0, 0};
         //Map就是引用，同一块地址

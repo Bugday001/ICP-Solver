@@ -55,18 +55,18 @@ int main() {
     std::cout << "origi T:\n"
               << Tr << std::endl;
 
-    // display_2_pc(cloud_source, cloud_target, "before", 1);
+    display_2_pc(cloud_source, cloud_target, "before", 1);
     CLOUD_PTR transformed_source(new CLOUD());
     Eigen::Matrix4f T;
     cout<<"===========START CERES ICP TEST !==========="<<endl;
     //对于slam直接icp匹配，大概10,000是一个较好的数量。依据DLO算法论文
     cout<<"cloud_source points size: "<<cloud_source->size()<<endl;
-    //test
-    reg_ptr->setGICPTargetCloud(cloud_target);
 
+    //GICP
+    reg_ptr->setGICPTargetCloud(cloud_target);
     reg_ptr->GICPMatch(cloud_source, Eigen::Matrix4f::Identity(), transformed_source, T);
-    // return 0;
-    //end test
+
+    //icp
     // reg_ptr->setTargetCloud(cloud_target);
     // reg_ptr->scanMatch(cloud_source, Eigen::Matrix4f::Identity(), transformed_source, T);
     std::cout << T << std::endl;

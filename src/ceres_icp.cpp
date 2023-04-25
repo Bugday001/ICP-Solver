@@ -1,8 +1,9 @@
 #include "ceres_icp.h"
 #include "lidarCeres.h"
+#include <chrono>
 
 int USE_AUTODIFF = 1;
-
+using namespace std::literals::chrono_literals;
 namespace ceresICP
 {
     CERES_ICP::CERES_ICP(const YAML::Node &node)
@@ -13,6 +14,8 @@ namespace ceresICP
         trans_eps = node["trans_eps"].as<float>();
         euc_fitness_eps = node["euc_fitness_eps"].as<float>();
         is_autoDiff = node["is_autoDiff"].as<bool>();
+        isDebug = node["isDebug"].as<bool>();
+        thread_nums = node["ceres_thread_nums"].as<int>();
     }
 
     CERES_ICP::~CERES_ICP()
@@ -138,7 +141,8 @@ namespace ceresICP
             ceres::Problem problem(problem_options);
             if (is_autoDiff)
             {
-                std::cout << "auto Diff, i: " << i << std::endl;
+                if(isDebug)
+                    std::cout << "auto Diff, i: " << i << std::endl;
                 ceres::LocalParameterization *q_parameterization =
                     new ceres::EigenQuaternionParameterization(); // xyzw顺序
                 // 注意到如果使用了LocalParameterization，那么必须添加AddParameterBlock来添加不规则+-优化变量
@@ -152,7 +156,6 @@ namespace ceresICP
                 problem.AddParameterBlock(parameters, 7, new ceresICP::PoseSE3Parameterization());
             }
 
-            // std::cout << "------------ " << i << "------------" << std::endl;
             for (int j = 0; j < transform_cloud->size(); ++j)
             {
                 const PointType &origin_pt = source_ptr->points[j];
@@ -213,21 +216,17 @@ namespace ceresICP
     bool CERES_ICP::GICPMatch(const CLOUD_PTR &source, const Eigen::Matrix4f &predict_pose,
                          CLOUD_PTR &transformed_source_ptr, Eigen::Matrix4f &result_pose)
     {   
-        //test
-        // std::cout<<gicp_target.Cs[0]<<std::endl;
-        // return false;
-        //end test
-
-        // source_ptr = source;
-        
         CLOUD_PTR transform_cloud(new CLOUD(*source));
         gicp_source.setCloudPtr(transform_cloud);
         Eigen::Matrix4d T = predict_pose.cast<double>();
         q_w_curr = Eigen::Quaterniond(T.block<3, 3>(0, 0));
         t_w_curr = T.block<3, 1>(0, 3);
-
         for (int i = 0; i < max_iterations; ++i)
         {
+            if(isDebug) {
+                std::cout << "auto Diff, i: " << i << ", using time: ";
+            }
+            auto begin_time = std::chrono::high_resolution_clock::now(); //记录当前时间
             pcl::transformPointCloud(*gicp_source.cloud_ptr, *transform_cloud, T);
             gicp_source.computeCov();
             ceres::LossFunction *loss_function = new ceres::HuberLoss(0.1);
@@ -235,11 +234,10 @@ namespace ceresICP
             ceres::Problem problem(problem_options);
             ceres::LocalParameterization *q_parameterization =
                 new ceres::EigenQuaternionParameterization(); // xyzw顺序
-            std::cout << "auto Diff, i: " << i << std::endl;
             // 注意到如果使用了LocalParameterization，那么必须添加AddParameterBlock来添加不规则+-优化变量
             problem.AddParameterBlock(parameters, 4, q_parameterization);
             problem.AddParameterBlock(parameters + 4, 3);
-            // std::cout << "------------ " << i << "------------" << std::endl;
+
             for (int j = 0; j < transform_cloud->size(); ++j)
             {
                 const PointType &origin_pt = gicp_source.cloud_ptr->points[j];
@@ -249,27 +247,29 @@ namespace ceresICP
                 const PointType &transform_pt = transform_cloud->at(j);
                 std::vector<float> res_dis;
                 std::vector<int> indices;
-                // std::cout<<"okkkk"<<std::endl;
                 gicp_target.kdtree_flann->nearestKSearch(transform_pt, 1, indices, res_dis);
                 if (res_dis.front() > max_coresspoind_dis)
                     continue;
-                // std::cout<<"okkkkkk"<<std::endl;
-                Eigen::Vector3d nearest_pt = Eigen::Vector3d(gicp_target.cloud_ptr->at(indices.front()).x,
-                                                             gicp_target.cloud_ptr->at(indices.front()).y,
-                                                             gicp_target.cloud_ptr->at(indices.front()).z);
+                int idx = indices.front();
+                const Eigen::Vector3d nearest_pt = gicp_target.cloud_ptr->at(idx).getVector3fMap().template cast<double>();
+                // Eigen::Vector3d nearest_pt = Eigen::Vector3d(gicp_target.cloud_ptr->at(indices.front()).x,
+                //                                              gicp_target.cloud_ptr->at(indices.front()).y,
+                //                                              gicp_target.cloud_ptr->at(indices.front()).z);
 
-                Eigen::Vector3d origin_eigen(origin_pt.x, origin_pt.y, origin_pt.z);
-                // std::cout<<"okk"<<std::endl;
+                Eigen::Vector3d origin_eigen = origin_pt.getVector3fMap().template cast<double>();//(origin_pt.x, origin_pt.y, origin_pt.z);
                 ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<GICPFactor, 1, 4, 3>(
-                    new ceresICP::GICPFactor(origin_eigen, gicp_source.Cs[indices.front()], nearest_pt, gicp_target.Cs[indices.front()]));
+                    new ceresICP::GICPFactor(origin_eigen, gicp_source.Cs[idx], nearest_pt, gicp_target.Cs[idx]));
                 problem.AddResidualBlock(cost_function, loss_function, parameters, parameters+4);
             }
+            auto create_time = std::chrono::high_resolution_clock::now(); 
+
             ceres::Solver::Options options;
             options.linear_solver_type = ceres::DENSE_QR;
             options.max_num_iterations = 10;
             options.minimizer_progress_to_stdout = false;
             options.check_gradients = false;
             options.gradient_check_relative_precision = 1e-4;
+            options.num_threads = thread_nums;
 
             ceres::Solver::Summary summary;
             ceres::Solve(options, &problem, &summary);
@@ -277,9 +277,16 @@ namespace ceresICP
             T.setIdentity();
             T.block<3, 1>(0, 3) = t_w_curr;
             T.block<3, 3>(0, 0) = q_w_curr.toRotationMatrix();
-
-            // std::cout << "T\n"
-            //           << T << std::endl;
+            std::chrono::duration<float> duration;
+            auto end_time = std::chrono::high_resolution_clock::now(); 
+            duration = create_time - begin_time;
+            if(isDebug) {
+                std::cout << "构造用时: "<<(duration).count() << "s";
+                duration = end_time - create_time;
+                std::cout<<"解算用时: "<<(duration).count() << "s";
+                duration = end_time - begin_time;
+                std::cout<<"总共用时: "<<(duration).count() << "s"<< std::endl; //输出运行时间
+            }
         }
 
         final_pose = T.cast<float>();

@@ -1,7 +1,6 @@
-# data_path: /home/x/catkin_ws/src/lidar_localization   # 数据存放路径
 target_file: ../pcds/cloud-87.pcd
 source_file: ../pcds/cloud-89.pcd
-ds_size: 0.25
+ds_size: 3
 
 # 各配置选项对应参数
 ## 匹配相关参数
@@ -9,8 +8,10 @@ ICP_CERES:
     max_corr_dist : 1.0
     trans_eps : 0.01
     euc_fitness_eps : 0.36
-    max_iter : 10
+    max_iter : 5
     is_autoDiff : false
+    isDebug: true
+    ceres_thread_nums: 8
 ICP_G2O:
     max_corr_dist : 1.0
     trans_eps : 0.01
