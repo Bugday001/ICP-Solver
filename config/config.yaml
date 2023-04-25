@@ -11,7 +11,7 @@ ICP_CERES:
     max_iter : 5
     is_autoDiff : false
     isDebug: true
-    ceres_thread_nums: 8
+    ceres_thread_nums: 4
 ICP_G2O:
     max_corr_dist : 1.0
     trans_eps : 0.01
