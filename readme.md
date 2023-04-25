@@ -22,6 +22,10 @@ Follow [Ceres Installation](http://ceres-solver.org/installation.html).
 
 Follow [PCL Installation](http://www.pointclouds.org/downloads/linux.html).
 
+**yaml-cpp**
+
+Follow [yaml-cpp](https://github.com/jbeder/yaml-cpp)
+
 
 ## Results
 |  original pointCloud   | pointCloud after GICP  |
