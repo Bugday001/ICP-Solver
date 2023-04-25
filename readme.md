@@ -1,14 +1,26 @@
 # CERES-ICP
+## CERES-ICP
 使用CERES库进行icp匹配
 
-GICP：支持自动求导。使用llt()分解似乎效果还不如直接相乘。
+GICP：支持自动求导。
 
 Point-to-Point ICP：支持解析求导和自动求导。通过yaml中的is_autoDiff选择。
 
 支持Debug输出每次运行时间，支持设置ceres使用多线程。
 
+## Dependencies
+###  **Ubuntu**
+Ubuntu 64-bit 18.04.
+
+### **Ceres Solver**
+Follow [Ceres Installation](http://ceres-solver.org/installation.html).
+
+### **PCL**
+Follow [PCL Installation](http://www.pointclouds.org/downloads/linux.html).
+
+
 ## Results
-|  原始点云   | 匹配后点云  |
+|  original pointCloud   | pointCloud after GICP  |
 |  ----  | ----  |
 | ![before](./doc/before.png)  | ![after](./doc/after.png) |
 
@@ -30,7 +42,7 @@ auto Diff, i: 4, using time: 构造用时: 0.0285555s解算用时: 0.326351s总�
 
 
 ## TODO
-- [X] Plane-to-Plane ICP.(GICP)。
+- [X] Plane-to-Plane ICP.(GICP)。(使用llt()分解似乎效果还不如直接相乘。)
 - [ ] Using nanoFLANN to speed up.
 - [ ] Is there any way to optimize the way when creating a ceres solver.
 
