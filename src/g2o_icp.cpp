@@ -43,7 +43,7 @@ namespace XICP
         {
             if(isDebug) std::cout<<"i: "<<i<<std::endl;
             pcl::transformPointCloud(*gicp_source.cloud_ptr, *transform_cloud, T);  //左乘
-            gicp_source.computeCov();
+            gicp_source.setCloudPtr(transform_cloud);
             // 构建图优化，先设定g2o
             // 每个误差项优化变量维度为6，误差值维度为3
             typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType; 

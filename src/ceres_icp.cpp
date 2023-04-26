@@ -227,7 +227,7 @@ namespace XICP
             }
             auto begin_time = std::chrono::high_resolution_clock::now(); //记录当前时间
             pcl::transformPointCloud(*gicp_source.cloud_ptr, *transform_cloud, T);
-            gicp_source.computeCov();
+            gicp_source.setCloudPtr(transform_cloud);
             ceres::LossFunction *loss_function = new ceres::HuberLoss(0.1);
             ceres::Problem::Options problem_options;
             ceres::Problem problem(problem_options);

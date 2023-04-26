@@ -1,8 +1,8 @@
 target_file: ../pcds/cloud-87.pcd
 source_file: ../pcds/cloud-89.pcd
-ds_size: 1
+ds_size: 3
 
-method: "ICP_G2O"
+method: "ICP_CERES"
 # 各配置选项对应参数
 ## 匹配相关参数
 ICP_CERES:
