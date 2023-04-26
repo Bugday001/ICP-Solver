@@ -2,9 +2,8 @@
 #include "lidarCeres.h"
 #include <chrono>
 
-int USE_AUTODIFF = 1;
 using namespace std::literals::chrono_literals;
-namespace ceresICP
+namespace XICP
 {
     CERES_ICP::CERES_ICP(const YAML::Node &node)
         : kdtree_flann(new pcl::KdTreeFLANN<PointType>)
@@ -153,7 +152,7 @@ namespace ceresICP
             {
                 // 如果我们的参数属于正常的plus更新的话，也就是没有过参数（LocalParameterization），没有manifold space，那么就完全不需要调用AddParameterBlock或者SetParameterization函数；
                 // void AddParameterBlock(double* values, int size, LocalParameterization* local_parameterization);
-                problem.AddParameterBlock(parameters, 7, new ceresICP::PoseSE3Parameterization());
+                problem.AddParameterBlock(parameters, 7, new XICP::PoseSE3Parameterization());
             }
 
             for (int j = 0; j < transform_cloud->size(); ++j)
@@ -182,7 +181,7 @@ namespace ceresICP
                 }
                 else
                 {
-                    ceres::CostFunction *cost_function = new ceresICP::EdgeAnalyticCostFuntion(origin_eigen, nearest_pt);
+                    ceres::CostFunction *cost_function = new XICP::EdgeAnalyticCostFuntion(origin_eigen, nearest_pt);
                     problem.AddResidualBlock(cost_function, loss_function, parameters);
                 }
             }
@@ -258,7 +257,7 @@ namespace ceresICP
 
                 Eigen::Vector3d origin_eigen = origin_pt.getVector3fMap().template cast<double>();//(origin_pt.x, origin_pt.y, origin_pt.z);
                 ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<GICPFactor, 1, 4, 3>(
-                    new ceresICP::GICPFactor(origin_eigen, gicp_source.Cs[idx], nearest_pt, gicp_target.Cs[idx]));
+                    new XICP::GICPFactor(origin_eigen, gicp_source.Cs[idx], nearest_pt, gicp_target.Cs[idx]));
                 problem.AddResidualBlock(cost_function, loss_function, parameters, parameters+4);
             }
             auto create_time = std::chrono::high_resolution_clock::now(); 

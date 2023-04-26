@@ -1,7 +1,8 @@
 target_file: ../pcds/cloud-87.pcd
 source_file: ../pcds/cloud-89.pcd
-ds_size: 3
+ds_size: 1
 
+method: "ICP_G2O"
 # 各配置选项对应参数
 ## 匹配相关参数
 ICP_CERES:
@@ -13,16 +14,11 @@ ICP_CERES:
     isDebug: true
     ceres_thread_nums: 4
 ICP_G2O:
-    max_corr_dist : 1.0
+    max_corr_dist : 3.0
     trans_eps : 0.01
     euc_fitness_eps : 0.36
-    max_iter : 15
-SICP:
-    p : 1.0
-    mu : 10.0
-    alpha : 1.2
-    max_mu : 1e5
-    max_icp : 100
-    max_outer : 100
-    max_inner : 1
-    stop : 1e-5
+    max_iter : 5
+    is_autoDiff : false
+    isDebug: false
+    thread_nums: 4
+    max_opt: 2

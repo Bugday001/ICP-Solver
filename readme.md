@@ -1,8 +1,10 @@
-# CERES-ICP
-## CERES-ICP
+# ICP-Solver
+## ICP-Solver
 使用CERES库进行icp匹配
 
 GICP：支持自动求导。
+
+G2O：用多种方法实现了普通ICP但效果都不好。实现了GICP效果仍不好会来回矫正，无法收敛。
 
 Point-to-Point ICP：支持解析求导和自动求导。通过yaml中的is_autoDiff选择。
 
@@ -28,10 +30,17 @@ Follow [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 
 
 ## Results
+**CERES**
 |  original pointCloud   | pointCloud after GICP  |
 |  ----  | ----  |
 | ![before](./doc/before.png)  | ![after](./doc/after.png) |
 
+**G2O**
+
+优化过程中无法收敛。
+|  original pointCloud   | pointCloud after GICP  |
+|  ----  | ----  |
+| ![before](./doc/gicp_before.png)  | ![after](./doc/after_gicp.png) |
 
 **Output:**
 ```
@@ -50,6 +59,7 @@ auto Diff, i: 4, using time: 构造用时: 0.0285555s解算用时: 0.326351s总�
 
 
 ## TODO
+- [ ] add g2o method.
 - [X] Plane-to-Plane ICP.(GICP)。(使用llt()分解似乎效果还不如直接相乘。)
 - [ ] Using nanoFLANN to speed up.
 - [ ] Is there any way to optimize the way when creating a ceres solver.

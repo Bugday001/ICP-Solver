@@ -1,6 +1,6 @@
 #include "lidarCeres.h"
 
-namespace ceresICP
+namespace XICP
 {
     EdgeAnalyticCostFuntion::EdgeAnalyticCostFuntion(Eigen::Vector3d cur_pt_, Eigen::Vector3d near_pt_)
         : cur_pt(cur_pt_), near_pt(near_pt_) {}

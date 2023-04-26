@@ -6,8 +6,11 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
-
+#include <chrono>
 #include "ceres_icp.h"
+#include "g2o_icp.h"
+
+using namespace std::literals::chrono_literals;
 
 void display_2_pc(const typename pcl::PointCloud<PointType>::Ptr &Cloud1, const typename pcl::PointCloud<PointType>::Ptr &Cloud2,
                   std::string displayname, int display_downsample_ratio);
@@ -19,7 +22,7 @@ int main() {
     std::string s_str = config_node["source_file"].as<std::string>();
     std::cout << "load file: " << t_str << ", and " << s_str << std::endl;
     double ds_size = config_node["ds_size"].as<double>();
-
+    std::string method = config_node["method"].as<std::string>();
     CLOUD_PTR cloud_source(new CLOUD());
     CLOUD_PTR cloud_target(new CLOUD());
     if (pcl::io::loadPCDFile<PointType>(s_str, *cloud_source) == -1)
@@ -33,7 +36,7 @@ int main() {
         return (-1);
     }
 
-    ceresICP::CERES_ICP* reg_ptr = new ceresICP::CERES_ICP(config_node["ICP_CERES"]);
+    XICP::G2O_ICP* reg_ptr = new XICP::G2O_ICP(config_node[method]);
 
     //滤波
     std::vector<int> idx;
@@ -61,10 +64,14 @@ int main() {
     cout<<"===========START CERES ICP TEST !==========="<<endl;
     //对于slam直接icp匹配，大概10,000是一个较好的数量。依据DLO算法论文
     cout<<"cloud_source points size: "<<cloud_source->size()<<endl;
-
+    
+    auto start_time = std::chrono::high_resolution_clock::now(); 
     //GICP
     reg_ptr->setGICPTargetCloud(cloud_target);
     reg_ptr->GICPMatch(cloud_source, Eigen::Matrix4f::Identity(), transformed_source, T);
+    auto end_time = std::chrono::high_resolution_clock::now(); 
+    std::chrono::duration<float> duration = end_time - start_time;
+    std::cout << "构造用时: "<<duration.count() << "s"<<std::endl;
 
     //icp
     // reg_ptr->setTargetCloud(cloud_target);
