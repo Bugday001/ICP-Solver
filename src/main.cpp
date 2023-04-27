@@ -36,7 +36,7 @@ int main() {
         return (-1);
     }
 
-    XICP::CERES_ICP* reg_ptr = new XICP::CERES_ICP(config_node[method]);
+    XICP::G2O_ICP* reg_ptr = new XICP::G2O_ICP(config_node[method]);
 
     //滤波
     std::vector<int> idx;

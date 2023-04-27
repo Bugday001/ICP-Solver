@@ -24,7 +24,7 @@
 namespace XICP
 {
     /**
-     * 使用g2o求解
+     * Sophus::SE3d顶点类
      */
     class GICPVertex : public g2o::BaseVertex<6, Sophus::SE3d>
     {
@@ -77,7 +77,7 @@ namespace XICP
 
     /**
      * 误差模型 模板参数：误差值维度，测量值类型，连接顶点类型
-     *
+     *一元边
      */
     class ICPEdge : public g2o::BaseUnaryEdge<3, Eigen::Vector3d, GICPVertex>
     {
@@ -105,6 +105,7 @@ namespace XICP
             //  e =Tp-p  ,de/T的李代数
             _jacobianOplusXi.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity();
             _jacobianOplusXi.block<3, 3>(0, 3) = -(T.matrix()).block<3, 3>(0, 0) * Sophus::SO3d::hat(_p); //  右乘扰动
+            // _jacobianOplusXi.block<3, 3>(0, 3) = -Sophus::SO3d::hat(T * _p);//  左乘扰动
         }
 
         virtual bool read(std::istream &in) {}

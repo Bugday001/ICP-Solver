@@ -31,8 +31,9 @@ namespace XICP
     bool G2O_ICP::GICPMatch(const CLOUD_PTR &source, const Eigen::Matrix4f &predict_pose,
                          CLOUD_PTR &transformed_source_ptr, Eigen::Matrix4f &result_pose)
     {   
-        CLOUD_PTR transform_cloud(new CLOUD(*source));
-        gicp_source.setCloudPtr(transform_cloud);
+        CLOUD_PTR source_ptr = source;
+        CLOUD_PTR transform_cloud(new CLOUD());
+        // gicp_source.setCloudPtr(transform_cloud);
         Eigen::Matrix4d T = predict_pose.cast<double>();
 
         Eigen::Matrix3d R = Eigen::Matrix<double, 3, 3>::Identity();
@@ -42,7 +43,7 @@ namespace XICP
         for (int i = 0; i < max_iterations; ++i)
         {
             if(isDebug) std::cout<<"i: "<<i<<std::endl;
-            pcl::transformPointCloud(*gicp_source.cloud_ptr, *transform_cloud, T);  //左乘
+            pcl::transformPointCloud(*source_ptr, *transform_cloud, T);  //左乘
             gicp_source.setCloudPtr(transform_cloud);
             // 构建图优化，先设定g2o
             // 每个误差项优化变量维度为6，误差值维度为3
@@ -96,9 +97,8 @@ namespace XICP
                 int idx = indices.front();
                 const Eigen::Vector3d nearest_pt = gicp_target.cloud_ptr->at(idx).getVector3fMap().template cast<double>();
 
-                Eigen::Vector3d origin_eigen = transform_pt.getVector3fMap().template cast<double>();//(origin_pt.x, origin_pt.y, origin_pt.z);
-                
-                double* init_data = origin_eigen.data();
+                Eigen::Vector3d point_eigen = transform_pt.getVector3fMap().template cast<double>();
+                double* init_data = point_eigen.data();
                 double* tmp = init_data+3;
                 tmp = gicp_source.Cs[idx].data();
                 tmp += 9;
@@ -117,11 +117,15 @@ namespace XICP
             optimizer.optimize(max_opt);
             // 输出优化值
             T = Eigen::Isometry3d(v4->estimate()).matrix()* T;
+            // Sophus::SE3d T_se3 = v1->estimate();
+            // std::cout << T_se3.matrix() << std::endl;
+
+            // T = T_se3.matrix() * T;
         }
 
         final_pose = T.cast<float>();
         result_pose = T.cast<float>();
-        pcl::transformPointCloud(*gicp_source.cloud_ptr, *transformed_source_ptr, result_pose);
+        pcl::transformPointCloud(*source_ptr, *transformed_source_ptr, result_pose);
         return true;
     }
 }

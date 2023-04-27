@@ -107,7 +107,7 @@ namespace XICP
                    Eigen::Vector3d nearest_pt, Eigen::Matrix3d nearest_C)
             : cur_pt_(origin_eigen), cur_C_(origin_C), near_pt_(nearest_pt), near_C_(nearest_C)
         {
-            // std::cout<<"ok-1"<<std::endl;
+
         }
 
         template <typename T>
