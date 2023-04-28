@@ -33,7 +33,7 @@ namespace XICP
     {   
         CLOUD_PTR source_ptr = source;
         CLOUD_PTR transform_cloud(new CLOUD());
-        // gicp_source.setCloudPtr(transform_cloud);
+        gicp_source.setCloudPtr(source);
         Eigen::Matrix4d T = predict_pose.cast<double>();
 
         Eigen::Matrix3d R = Eigen::Matrix<double, 3, 3>::Identity();
@@ -44,7 +44,7 @@ namespace XICP
         {
             if(isDebug) std::cout<<"i: "<<i<<std::endl;
             pcl::transformPointCloud(*source_ptr, *transform_cloud, T);  //左乘
-            gicp_source.setCloudPtr(transform_cloud);
+            gicp_source.updateCov(T.block<3,3>(0, 0));
             // 构建图优化，先设定g2o
             // 每个误差项优化变量维度为6，误差值维度为3
             typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType; 

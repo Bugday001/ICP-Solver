@@ -25,11 +25,14 @@ namespace XICP
         GICPPoint();
         void setCloudPtr(const CLOUD_PTR &cloud);
         void computeCov();
+        void updateCov(Eigen::Matrix3d R);
         CLOUD_PTR cloud_ptr;
         pcl::KdTreeFLANN<PointType>::Ptr kdtree_flann;
         float range;
+        std::vector<Eigen::Matrix3d> Us; // covariance matrixs
         std::vector<Eigen::Matrix3d> Cs; // covariance matrixs
         double gicp_epsilon_ = 0.0004;   // epsilon constant for gicp paper; this is NOT the convergence tolerence
+        Eigen::Matrix3d epsilon_33;
     };
 
     class CERES_ICP

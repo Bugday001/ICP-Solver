@@ -61,7 +61,7 @@ auto Diff, i: 4, using time: 构造用时: 0.0285555s解算用时: 0.326351s总�
 ## TODO
 - [X] add g2o method.
 - [X] Plane-to-Plane ICP.(GICP)。(使用llt()分解似乎效果还不如直接相乘。)
-- [ ] GICP是否可以避免每次都要重新计算协方差，直接利用旋转矩阵在上一次基础上更新。
+- [X] GICP是否可以避免每次都要重新计算协方差，直接利用旋转矩阵在上一次基础上更新。($cov' = R*cov*R^T$,   $U' = R*U$)
 - [ ] Using nanoFLANN to speed up.
 - [ ] Is there any way to optimize the way when creating a ceres solver.
 

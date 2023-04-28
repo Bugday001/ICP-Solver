@@ -35,7 +35,11 @@ namespace XICP
     /**
      * init GICPPoint
     */
-    GICPPoint::GICPPoint():kdtree_flann(new pcl::KdTreeFLANN<PointType>){ }
+    GICPPoint::GICPPoint():kdtree_flann(new pcl::KdTreeFLANN<PointType>)
+    {
+            Eigen::Matrix3d epsilon_33 = Eigen::MatrixXd::Identity(3, 3);
+            epsilon_33(2, 2) = gicp_epsilon_;  // smallest singular value replaced by gicp_epsilon
+     }
 
     /**
      * 插入点云指针，计算协方差矩阵
@@ -52,10 +56,11 @@ namespace XICP
     */
     void  GICPPoint::computeCov()
     {
-                // 以下计算协方差矩阵
+        // 以下计算协方差矩阵
         int N = cloud_ptr->size();
         int K = 20; // number of closest points to use for local covariance estimate
         double mean[3];
+        Us.resize(N);
         Cs.resize(N);
         for (int i = 0; i < N; i++)
         {
@@ -111,11 +116,24 @@ namespace XICP
             //svd.singularValues(), svd.matrixU(), svd.matrixV()
 
             // zero out the cov matrix, since we know U = V since C is symmetric
-            cov.setZero();
-            Eigen::Matrix3d tmp = Eigen::MatrixXd::Identity(3, 3);
-            tmp(2, 2) = gicp_epsilon_;  // smallest singular value replaced by gicp_epsilon
+            Us[i] = svd.matrixV();
             // reconstitute the covariance matrix with modified singular values using the column vectors in V.
-            cov = svd.matrixV()*tmp*svd.matrixV().transpose();
+            cov = svd.matrixV()*epsilon_33*svd.matrixV().transpose();
+        }
+    }
+
+    /**
+     * 利用旋转矩阵更新协方差
+    */
+    void GICPPoint::updateCov(Eigen::Matrix3d R) 
+    {
+        // 以下计算协方差矩阵
+        int N = cloud_ptr->size();
+        for (int i = 0; i < N; i++)
+        {
+            Eigen::Matrix3d &v = Us[i];
+            v = R*Us[i];
+            Cs[i] = v*epsilon_33*v.transpose();
         }
     }
 
@@ -227,7 +245,7 @@ namespace XICP
             }
             auto begin_time = std::chrono::high_resolution_clock::now(); //记录当前时间
             pcl::transformPointCloud(*gicp_source.cloud_ptr, *transform_cloud, T);
-            gicp_source.setCloudPtr(transform_cloud);
+            gicp_source.updateCov(T.block<3, 3>(0, 0));
             ceres::LossFunction *loss_function = new ceres::HuberLoss(0.1);
             ceres::Problem::Options problem_options;
             ceres::Problem problem(problem_options);
