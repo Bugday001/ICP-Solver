@@ -9,6 +9,7 @@
 #include <chrono>
 #include "ceres_icp.h"
 #include "g2o_icp.h"
+#include "gtsam_icp.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -36,7 +37,7 @@ int main() {
         return (-1);
     }
 
-    XICP::G2O_ICP* reg_ptr = new XICP::G2O_ICP(config_node[method]);
+    XICP::GTSAM_ICP* reg_ptr = new XICP::GTSAM_ICP(config_node[method]);
 
     //滤波
     std::vector<int> idx;
